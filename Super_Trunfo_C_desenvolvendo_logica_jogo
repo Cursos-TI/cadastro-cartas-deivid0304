@@ -1,0 +1,431 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+// Estrutura para representar uma carta do Super Truco
+typedef struct {
+    char estado[3];
+    char codigo[10];
+    char cidade[50];
+    int populacao;
+    float area;
+    float pib;
+    int pontos_turisticos;
+    float densidade_populacional;
+    float pib_per_capita;
+} Carta;
+
+// Função para limpar o buffer de entrada
+void limpar_buffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+// Função para calcular densidade populacional e PIB per capita
+void calcular_metricas(Carta *carta) {
+    if (carta->area > 0) {
+        carta->densidade_populacional = carta->populacao / carta->area;
+    } else {
+        carta->densidade_populacional = 0;
+    }
+    
+    if (carta->populacao > 0) {
+        carta->pib_per_capita = carta->pib / carta->populacao;
+    } else {
+        carta->pib_per_capita = 0;
+    }
+}
+
+// Função para cadastrar uma carta via input
+void cadastrar_carta(Carta *carta, int numero_carta) {
+    printf("\n=== CADASTRO DA CARTA %d ===\n", numero_carta);
+    
+    // Estado
+    printf("Digite o estado (2 letras): ");
+    scanf("%2s", carta->estado);
+    limpar_buffer();
+    
+    // Código
+    printf("Digite o código da carta: ");
+    scanf("%9s", carta->codigo);
+    limpar_buffer();
+    
+    // Cidade
+    printf("Digite o nome da cidade: ");
+    fgets(carta->cidade, 50, stdin);
+    carta->cidade[strcspn(carta->cidade, "\n")] = 0; // Remove o \n
+    
+    // População
+    printf("Digite a população (número inteiro): ");
+    while (scanf("%d", &carta->populacao) != 1 || carta->populacao < 0) {
+        printf("População inválida! Digite um número inteiro positivo: ");
+        limpar_buffer();
+    }
+    limpar_buffer();
+    
+    // Área
+    printf("Digite a área em km² (número decimal): ");
+    while (scanf("%f", &carta->area) != 1 || carta->area <= 0) {
+        printf("Área inválida! Digite um número decimal positivo: ");
+        limpar_buffer();
+    }
+    limpar_buffer();
+    
+    // PIB
+    printf("Digite o PIB em bilhões (número decimal): ");
+    while (scanf("%f", &carta->pib) != 1 || carta->pib < 0) {
+        printf("PIB inválido! Digite um número decimal positivo: ");
+        limpar_buffer();
+    }
+    limpar_buffer();
+    
+    // Pontos Turísticos
+    printf("Digite o número de pontos turísticos: ");
+    while (scanf("%d", &carta->pontos_turisticos) != 1 || carta->pontos_turisticos < 0) {
+        printf("Número inválido! Digite um inteiro positivo: ");
+        limpar_buffer();
+    }
+    limpar_buffer();
+    
+    // Calcular métricas automaticamente
+    calcular_metricas(carta);
+    
+    printf("✅ Carta %d cadastrada com sucesso!\n", numero_carta);
+}
+
+// Função para exibir os dados de uma carta
+void exibir_carta(Carta carta, int numero_carta) {
+    printf("\n=== CARTA %d ===\n", numero_carta);
+    printf("Estado: %s\n", carta.estado);
+    printf("Código: %s\n", carta.codigo);
+    printf("Cidade: %s\n", carta.cidade);
+    printf("População: %d habitantes\n", carta.populacao);
+    printf("Área: %.2f km²\n", carta.area);
+    printf("PIB: R$ %.2f bilhões\n", carta.pib);
+    printf("Pontos Turísticos: %d\n", carta.pontos_turisticos);
+    printf("Densidade Populacional: %.2f hab/km²\n", carta.densidade_populacional);
+    printf("PIB per capita: R$ %.2f\n", carta.pib_per_capita);
+}
+
+// Função para comparar dois atributos (nível novato)
+int comparar_atributo_simples(Carta c1, Carta c2, int atributo) {
+    float valor1, valor2;
+    
+    switch(atributo) {
+        case 1: // População
+            valor1 = c1.populacao;
+            valor2 = c2.populacao;
+            break;
+        case 2: // Área
+            valor1 = c1.area;
+            valor2 = c2.area;
+            break;
+        case 3: // PIB
+            valor1 = c1.pib;
+            valor2 = c2.pib;
+            break;
+        case 4: // Pontos Turísticos
+            valor1 = c1.pontos_turisticos;
+            valor2 = c2.pontos_turisticos;
+            break;
+        case 5: // Densidade Populacional
+            valor1 = c1.densidade_populacional;
+            valor2 = c2.densidade_populacional;
+            break;
+        case 6: // PIB per capita
+            valor1 = c1.pib_per_capita;
+            valor2 = c2.pib_per_capita;
+            break;
+        default:
+            return 0; // Empate para atributo inválido
+    }
+    
+    // Para densidade populacional, menor valor vence
+    if (atributo == 5) {
+        return (valor1 < valor2) ? 1 : (valor1 > valor2) ? 2 : 0;
+    } else {
+        // Para outros atributos, maior valor vence
+        return (valor1 > valor2) ? 1 : (valor1 < valor2) ? 2 : 0;
+    }
+}
+
+// Função para obter nome do atributo
+char* nome_atributo(int atributo) {
+    switch(atributo) {
+        case 1: return "População";
+        case 2: return "Área";
+        case 3: return "PIB";
+        case 4: return "Pontos Turísticos";
+        case 5: return "Densidade Populacional";
+        case 6: return "PIB per capita";
+        default: return "Desconhecido";
+    }
+}
+
+// Função para exibir menu de atributos disponíveis
+void exibir_menu_atributos(int atributos_disponiveis[]) {
+    printf("\n=== ATRIBUTOS DISPONÍVEIS ===\n");
+    if (atributos_disponiveis[1]) printf("1 - População\n");
+    if (atributos_disponiveis[2]) printf("2 - Área\n");
+    if (atributos_disponiveis[3]) printf("3 - PIB\n");
+    if (atributos_disponiveis[4]) printf("4 - Pontos Turísticos\n");
+    if (atributos_disponiveis[5]) printf("5 - Densidade Populacional\n");
+    if (atributos_disponiveis[6]) printf("6 - PIB per capita\n");
+}
+
+// Função principal do nível novato (comparação simples)
+void nivel_novato(Carta c1, Carta c2) {
+    printf("\n=== NÍVEL NOVATO - COMPARAÇÃO SIMPLES ===\n");
+    
+    // Atributo fixo para comparação (População)
+    int atributo_escolhido = 1;
+    
+    printf("Comparação de cartas (Atributo: %s):\n", nome_atributo(atributo_escolhido));
+    printf("Carta 1 - %s (%s): ", c1.cidade, c1.estado);
+    
+    // Exibir valor do atributo escolhido
+    switch(atributo_escolhido) {
+        case 1: printf("%d\n", c1.populacao); break;
+        case 2: printf("%.2f\n", c1.area); break;
+        case 3: printf("%.2f\n", c1.pib); break;
+        case 4: printf("%d\n", c1.pontos_turisticos); break;
+        case 5: printf("%.2f\n", c1.densidade_populacional); break;
+        case 6: printf("%.2f\n", c1.pib_per_capita); break;
+    }
+    
+    printf("Carta 2 - %s (%s): ", c2.cidade, c2.estado);
+    switch(atributo_escolhido) {
+        case 1: printf("%d\n", c2.populacao); break;
+        case 2: printf("%.2f\n", c2.area); break;
+        case 3: printf("%.2f\n", c2.pib); break;
+        case 4: printf("%d\n", c2.pontos_turisticos); break;
+        case 5: printf("%.2f\n", c2.densidade_populacional); break;
+        case 6: printf("%.2f\n", c2.pib_per_capita); break;
+    }
+    
+    int resultado = comparar_atributo_simples(c1, c2, atributo_escolhido);
+    
+    if (resultado == 1) {
+        printf("Resultado: Carta 1 (%s) venceu!\n", c1.cidade);
+    } else if (resultado == 2) {
+        printf("Resultado: Carta 2 (%s) venceu!\n", c2.cidade);
+    } else {
+        printf("Resultado: Empate!\n");
+    }
+}
+
+// Função do nível aventureiro (menu interativo)
+void nivel_aventureiro(Carta c1, Carta c2) {
+    printf("\n=== NÍVEL AVENTUREIRO - MENU INTERATIVO ===\n");
+    
+    int opcao;
+    int atributos_disponiveis[] = {0, 1, 1, 1, 1, 1, 1}; // Índices 1-6 disponíveis
+    
+    do {
+        exibir_menu_atributos(atributos_disponiveis);
+        printf("\nEscolha o atributo para comparação (1-6): ");
+        
+        if (scanf("%d", &opcao) != 1) {
+            printf("Entrada inválida! ");
+            limpar_buffer();
+            opcao = 0; // Força repetição do loop
+        }
+        
+        if (opcao < 1 || opcao > 6) {
+            printf("Opção inválida! Tente novamente.\n");
+        }
+    } while (opcao < 1 || opcao > 6);
+    
+    printf("\nComparação de cartas (Atributo: %s):\n", nome_atributo(opcao));
+    exibir_carta(c1, 1);
+    exibir_carta(c2, 2);
+    
+    int resultado = comparar_atributo_simples(c1, c2, opcao);
+    
+    // Estrutura switch para exibir resultado
+    switch(resultado) {
+        case 1:
+            printf("\n🎉 RESULTADO: Carta 1 (%s) VENCEU!\n", c1.cidade);
+            break;
+        case 2:
+            printf("\n🎉 RESULTADO: Carta 2 (%s) VENCEU!\n", c2.cidade);
+            break;
+        default:
+            printf("\n🤝 RESULTADO: EMPATE!\n");
+            break;
+    }
+}
+
+// Função do nível mestre (múltiplos atributos)
+void nivel_mestre(Carta c1, Carta c2) {
+    printf("\n=== NÍVEL MESTRE - MÚLTIPLOS ATRIBUTOS ===\n");
+    
+    int atributo1, atributo2;
+    int atributos_disponiveis[] = {0, 1, 1, 1, 1, 1, 1};
+    
+    // Escolha do primeiro atributo
+    do {
+        exibir_menu_atributos(atributos_disponiveis);
+        printf("\nEscolha o PRIMEIRO atributo (1-6): ");
+        
+        if (scanf("%d", &atributo1) != 1) {
+            printf("Entrada inválida! ");
+            limpar_buffer();
+            atributo1 = 0;
+        }
+        
+        if (atributo1 < 1 || atributo1 > 6 || !atributos_disponiveis[atributo1]) {
+            printf("Opção inválida! Tente novamente.\n");
+        }
+    } while (atributo1 < 1 || atributo1 > 6 || !atributos_disponiveis[atributo1]);
+    
+    atributos_disponiveis[atributo1] = 0; // Remove o atributo escolhido
+    
+    // Escolha do segundo atributo
+    do {
+        exibir_menu_atributos(atributos_disponiveis);
+        printf("\nEscolha o SEGUNDO atributo (1-6, diferente do primeiro): ");
+        
+        if (scanf("%d", &atributo2) != 1) {
+            printf("Entrada inválida! ");
+            limpar_buffer();
+            atributo2 = 0;
+        }
+        
+        if (atributo2 < 1 || atributo2 > 6 || !atributos_disponiveis[atributo2]) {
+            printf("Opção inválida! Tente novamente.\n");
+        }
+    } while (atributo2 < 1 || atributo2 > 6 || !atributos_disponiveis[atributo2]);
+    
+    printf("\n=== COMPARAÇÃO AVANÇADA ===\n");
+    printf("Atributos escolhidos: %s e %s\n", 
+           nome_atributo(atributo1), nome_atributo(atributo2));
+    
+    // Comparação individual dos atributos
+    int resultado1 = comparar_atributo_simples(c1, c2, atributo1);
+    int resultado2 = comparar_atributo_simples(c1, c2, atributo2);
+    
+    // Cálculo dos valores para soma
+    float valor1_c1, valor1_c2, valor2_c1, valor2_c2;
+    
+    // Obter valores do primeiro atributo
+    switch(atributo1) {
+        case 1: valor1_c1 = c1.populacao; valor1_c2 = c2.populacao; break;
+        case 2: valor1_c1 = c1.area; valor1_c2 = c2.area; break;
+        case 3: valor1_c1 = c1.pib; valor1_c2 = c2.pib; break;
+        case 4: valor1_c1 = c1.pontos_turisticos; valor1_c2 = c2.pontos_turisticos; break;
+        case 5: valor1_c1 = c1.densidade_populacional; valor1_c2 = c2.densidade_populacional; break;
+        case 6: valor1_c1 = c1.pib_per_capita; valor1_c2 = c2.pib_per_capita; break;
+    }
+    
+    // Obter valores do segundo atributo
+    switch(atributo2) {
+        case 1: valor2_c1 = c1.populacao; valor2_c2 = c2.populacao; break;
+        case 2: valor2_c1 = c1.area; valor2_c2 = c2.area; break;
+        case 3: valor2_c1 = c1.pib; valor2_c2 = c2.pib; break;
+        case 4: valor2_c1 = c1.pontos_turisticos; valor2_c2 = c2.pontos_turisticos; break;
+        case 5: valor2_c1 = c1.densidade_populacional; valor2_c2 = c2.densidade_populacional; break;
+        case 6: valor2_c1 = c1.pib_per_capita; valor2_c2 = c2.pib_per_capita; break;
+    }
+    
+    // Exibir resultados individuais
+    printf("\n--- Comparação Individual ---\n");
+    printf("Atributo %s: ", nome_atributo(atributo1));
+    if (resultado1 == 1) printf("Carta 1 venceu");
+    else if (resultado1 == 2) printf("Carta 2 venceu");
+    else printf("Empate");
+    printf(" (%.2f vs %.2f)\n", valor1_c1, valor1_c2);
+    
+    printf("Atributo %s: ", nome_atributo(atributo2));
+    if (resultado2 == 1) printf("Carta 1 venceu");
+    else if (resultado2 == 2) printf("Carta 2 venceu");
+    else printf("Empate");
+    printf(" (%.2f vs %.2f)\n", valor2_c1, valor2_c2);
+    
+    // Calcular soma dos atributos
+    float soma_c1 = valor1_c1 + valor2_c1;
+    float soma_c2 = valor1_c2 + valor2_c2;
+    
+    printf("\n--- Soma dos Atributos ---\n");
+    printf("Carta 1 (%s): %.2f + %.2f = %.2f\n", c1.cidade, valor1_c1, valor2_c1, soma_c1);
+    printf("Carta 2 (%s): %.2f + %.2f = %.2f\n", c2.cidade, valor1_c2, valor2_c2, soma_c2);
+    
+    // Determinar vencedor final
+    if (soma_c1 > soma_c2) {
+        printf("\n🏆 VENCEDOR FINAL: CARTA 1 (%s)!\n", c1.cidade);
+    } else if (soma_c2 > soma_c1) {
+        printf("\n🏆 VENCEDOR FINAL: CARTA 2 (%s)!\n", c2.cidade);
+    } else {
+        printf("\n🤝 EMPATE FINAL!\n");
+    }
+}
+
+// Função principal
+int main() {
+    printf("=== SUPER TRUCO - JOGO DE COMPARAÇÃO DE CARTAS ===\n");
+    
+    Carta carta1, carta2;
+    
+    // Cadastrar as duas cartas via input
+    printf("\nVamos cadastrar as duas cartas para o jogo:\n");
+    cadastrar_carta(&carta1, 1);
+    cadastrar_carta(&carta2, 2);
+    
+    // Exibindo informações das cartas cadastradas
+    printf("\n📊 CARTAS CADASTRADAS:\n");
+    exibir_carta(carta1, 1);
+    exibir_carta(carta2, 2);
+    
+    int opcao_nivel;
+    
+    do {
+        printf("\n=== MENU PRINCIPAL ===\n");
+        printf("1 - Nível Novato (Comparação Simples)\n");
+        printf("2 - Nível Aventureiro (Menu Interativo)\n");
+        printf("3 - Nível Mestre (Múltiplos Atributos)\n");
+        printf("4 - Recadastrar Cartas\n");
+        printf("0 - Sair\n");
+        printf("Escolha uma opção: ");
+        
+        if (scanf("%d", &opcao_nivel) != 1) {
+            printf("Entrada inválida!\n");
+            limpar_buffer();
+            opcao_nivel = -1;
+            continue;
+        }
+        
+        switch(opcao_nivel) {
+            case 1:
+                nivel_novato(carta1, carta2);
+                break;
+            case 2:
+                nivel_aventureiro(carta1, carta2);
+                break;
+            case 3:
+                nivel_mestre(carta1, carta2);
+                break;
+            case 4:
+                // Recadastrar cartas
+                cadastrar_carta(&carta1, 1);
+                cadastrar_carta(&carta2, 2);
+                printf("\n📊 CARTAS ATUALIZADAS:\n");
+                exibir_carta(carta1, 1);
+                exibir_carta(carta2, 2);
+                break;
+            case 0:
+                printf("Obrigado por jogar Super Truco!\n");
+                break;
+            default:
+                printf("Opção inválida! Tente novamente.\n");
+                break;
+        }
+        
+        if (opcao_nivel != 0) {
+            printf("\nPressione Enter para continuar...");
+            limpar_buffer();
+        }
+        
+    } while (opcao_nivel != 0);
+    
+    return 0;
+}
